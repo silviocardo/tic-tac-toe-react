@@ -1,6 +1,6 @@
 // TODO
 // [done] 1 - For the current move only, show “You are at move #…” instead of a button.
-// 2 - Rewrite Board to use two loops to make the squares instead of hardcoding them.
+// [done] 2 - Rewrite Board to use two loops to make the squares instead of hardcoding them.
 // 3 - Add a toggle button that lets you sort the moves in either ascending or descending order.
 // 4 - When someone wins, highlight the three squares that caused the win (and when no one wins, display a message about the result being a draw).
 // 5 - Display the location for each move in the format (row, col) in the move history list.
@@ -43,24 +43,25 @@ function Board({xIsNext,squares,onPlay}) {
     status = "Next player: " + (xIsNext ? "X" : "O")
   }
 
+  // [TODO 2] create the board programmatically
+  let board, elemSquares = Array(0)
+  for (let i = 0; i < 9; i++) {
+    elemSquares.push(<Square value={squares[i]} onSquareClick={() => handleClick(i)} />)
+    if (elemSquares.length === 3) {
+      board =   <>
+                  {board}
+                  <div className="board-row">
+                    {elemSquares}
+                  </div>
+                </>
+      elemSquares = Array(0)
+    }
+  }
+  
   return (
     <>
       <div className="status">{status}</div>
-      <div className="board-row">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
-      </div>
+      {board}
     </>
   )
 }
@@ -98,7 +99,7 @@ export default function Game(){
   const moves = history.map(
     (squares, move) => {
       let description
-      if (move === 0) {
+      if (move === 0) { // [TODO 1]
         description = "Go to game start"
       } else if (currentMove != move) {
         description = "Go to move #" + move
