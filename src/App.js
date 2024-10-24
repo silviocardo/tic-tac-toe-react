@@ -1,7 +1,7 @@
 // TODO
 // [done] 1 - For the current move only, show “You are at move #…” instead of a button.
 // [done] 2 - Rewrite Board to use two loops to make the squares instead of hardcoding them.
-// 3 - Add a toggle button that lets you sort the moves in either ascending or descending order.
+// [done] 3 - Add a toggle button that lets you sort the moves in either ascending or descending order.
 // 4 - When someone wins, highlight the three squares that caused the win (and when no one wins, display a message about the result being a draw).
 // 5 - Display the location for each move in the format (row, col) in the move history list.
 
@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { memo } from "react";
 
-// OPTIMIZATION: do not re-render Square if its props are not changed
+// OPTIMIZATION "memo": do not re-render Square if its props are not changed
 const Square = memo( 
   function Square({value, onSquareClick}) {
     return (
@@ -22,7 +22,7 @@ function Board({xIsNext,squares,onPlay}) {
   // This component manages the current board setting
   // based on the next player that has to play (xIsNext)
   // on the current configuration of the board (squares)
-  // on what to do in case of a player playing
+  // on what to do in case of a player playing (onPlay)
   function handleClick(i){
     // function to handle activities when clicked on a cell
     // check that cell is not already filled or there's a winner
@@ -58,7 +58,7 @@ function Board({xIsNext,squares,onPlay}) {
     }
   }
   
-  return (
+  return ( // print the status on top of the board
     <>
       <div className="status">{status}</div>
       {board}
@@ -72,18 +72,21 @@ export default function Game(){
   const [xIsNext, setXIsNext] = useState(true) // CAN BE REMOVED - if currentMove is even => X is next
   const [history, setHistory] = useState([Array(9).fill(null)])
   const [currentMove, setCurrentMove] = useState(0)
+  const [order, setOrder] = useState(true) // order of moves: true = ascending, false = descending
 
   // retreive the currently selected game
   // if no previous move is selected then it will be the last one
   // if a previus move is selected then it will be here put as current
   const currentSquares = history[currentMove] 
 
+  let moves = createMoveButtons() // not a const because can be changed with changing moves order button
+
   function handlePlay(nextSquares){
     // function to be called by the Board to handle playing
     // based on the squares that the Board has in that moment
     // if we jumped to a previous move we need to store the boards up to that move only
     // and manage the next player
-    // if we did not jump, thent the current move will be updated with the last one                             
+    // if we did not jump, then the current move will be updated with the last one                             
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares]
     //                                                          ^ add as last item the next board quares
     setHistory(nextHistory)
@@ -96,23 +99,31 @@ export default function Game(){
     setXIsNext(nextMove % 2 === 0) // change player turn: if even then next player is X turn (as if it was the first move - at index 0)
   }
 
-  const moves = history.map(
-    (squares, move) => {
-      let description
-      if (move === 0) { // [TODO 1]
-        description = "Go to game start"
-      } else if (currentMove != move) {
-        description = "Go to move #" + move
-      } else {
-        description = "You are at move #" + move
+  function createMoveButtons(){
+    return history.map(
+      (squares, move) => {
+        let description
+        let idx = order ?  move : Math.abs(move - (history.length - 1))
+        if (idx === 0) { // [TODO 1]
+          description = "Go to game start"
+        } else if (currentMove != idx) {
+          description = "Go to move #" + idx
+        } else {
+          description = "You are at move #" + idx
+        }
+        return (
+          <li key={idx}>
+            <button onClick={() => jumpTo(idx)}>{description}</button>
+          </li>
+        )
       }
-      return (
-        <li key={move}>
-          <button onClick={() => jumpTo(move)}>{description}</button>
-        </li>
-      )
-    }
-  )
+    )
+  }
+  
+  function sortMoves(){ // [TODO 3] to be called when button to change moves order is clicked
+    setOrder(!order)
+    moves = createMoveButtons()
+  }
 
   return (
     <div className="game">
@@ -120,6 +131,7 @@ export default function Game(){
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
       </div>
       <div className="game-info">
+        <button onClick={() => sortMoves()}>{order? "Ascending" : "Descending"}</button>
         <ul>{moves}</ul>
       </div>
     </div>
