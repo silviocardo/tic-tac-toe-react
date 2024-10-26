@@ -2,7 +2,7 @@
 // [done] 1 - For the current move only, show “You are at move #…” instead of a button.
 // [done] 2 - Rewrite Board to use two loops to make the squares instead of hardcoding them.
 // [done] 3 - Add a toggle button that lets you sort the moves in either ascending or descending order.
-// 4 - When someone wins, highlight the three squares that caused the win (and when no one wins, display a message about the result being a draw).
+// [done] 4 - When someone wins, highlight the three squares that caused the win (and when no one wins, display a message about the result being a draw).
 // 5 - Display the location for each move in the format (row, col) in the move history list.
 
 
@@ -11,9 +11,9 @@ import { memo } from "react";
 
 // OPTIMIZATION "memo": do not re-render Square if its props are not changed
 const Square = memo( 
-  function Square({value, onSquareClick}) {
+  function Square({value, color, onSquareClick}) {
     return (
-      <button className="square" onClick={onSquareClick}>{value}</button>
+      <button className="square" style={{ background: color}} onClick={onSquareClick}>{value}</button>
     )
   }
 )
@@ -38,15 +38,21 @@ function Board({xIsNext,squares,onPlay}) {
   const winner = calculateWinner(squares)
   let status
   if (winner) {
-    status = "Winner: " + winner
+    if (winner.length > 0) {
+      status = "Winner: " + squares[winner[0]]
+    } else {
+      status = "It's a draw!"
+    }
   } else{
     status = "Next player: " + (xIsNext ? "X" : "O")
   }
 
   // [TODO 2] create the board programmatically
   let board, elemSquares = Array(0)
+  let color
   for (let i = 0; i < 9; i++) {
-    elemSquares.push(<Square value={squares[i]} onSquareClick={() => handleClick(i)} />)
+    color = (winner && winner.length > 0 && winner.includes(i)) ? '#93ff787c' : '#fff'
+    elemSquares.push(<Square value={squares[i]} color={color} onSquareClick={() => handleClick(i)} />)
     if (elemSquares.length === 3) {
       board =   <>
                   {board}
@@ -149,11 +155,15 @@ function calculateWinner(squares){
     [0, 4, 8],
     [2, 4, 6]
   ];
+  let fullBoard = true
   for (let i = 0; i < lines.length; i++) {
+    if (!squares[i]) {
+      fullBoard = false
+    }
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return Array(a,b,c); // return winner and winning cells
     }
   }
-  return null;
+  return fullBoard ? Array() : null;
 }
