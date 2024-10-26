@@ -3,7 +3,7 @@
 // [done] 2 - Rewrite Board to use two loops to make the squares instead of hardcoding them.
 // [done] 3 - Add a toggle button that lets you sort the moves in either ascending or descending order.
 // [done] 4 - When someone wins, highlight the three squares that caused the win (and when no one wins, display a message about the result being a draw).
-// 5 - Display the location for each move in the format (row, col) in the move history list.
+// [done] 5 - Display the location for each move in the format (row, col) in the move history list.
 
 
 import { useState } from "react";
@@ -106,16 +106,22 @@ export default function Game(){
   }
 
   function createMoveButtons(){
+    let description, row_col, row_col_str
     return history.map(
-      (squares, move) => {
-        let description
+      (_, move, arr) => {
         let idx = order ?  move : Math.abs(move - (history.length - 1))
+        if (idx != 0) {
+          row_col = calculateLastGame(arr[idx],arr[idx-1])
+          row_col_str = ` | ${arr[idx][matrix2vector(row_col[0],row_col[1])]} played at: [${row_col[0]+1},${row_col[1]+1}]`
+        } else {
+          row_col_str = ""
+        }
         if (idx === 0) { // [TODO 1]
           description = "Go to game start"
         } else if (currentMove != idx) {
-          description = "Go to move #" + idx
+          description = "Go to move #" + idx + row_col_str
         } else {
-          description = "You are at move #" + idx
+          description = "You are at move #" + idx + row_col_str
         }
         return (
           <li key={idx}>
@@ -166,4 +172,29 @@ function calculateWinner(squares){
     }
   }
   return fullBoard ? Array() : null;
+}
+
+function calculateLastGame(squares_prev, squares_curr){
+  // identify last play given two boards
+  // compute row, column of last play based on current board
+  let row = 0, col = 0
+  for (let i = 0; i<squares_curr.length; i++){
+    if (squares_curr[i] != squares_prev[i]) {
+      return vector2matrix(i)
+    } 
+  }
+}
+
+function matrix2vector(r,c){
+  // row and column to index in linear vector representation of the board
+  // row and column are 0-based indexes, returns a 0-based index
+  return c + 3*r
+}
+
+function vector2matrix(i){
+  // index in linear vector representation of the board to row and column indexes on board
+  // i is 0-based, returns row and column as 0-based indexes
+  const col = i % 3;
+  const row = i > 5 ? 2 : i < 3 ? 0 : 1; 
+  return [row,col]
 }
